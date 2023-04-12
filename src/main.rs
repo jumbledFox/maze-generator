@@ -26,53 +26,19 @@ fn main() {
     let mut frontiers: Vec<usize> = vec![];
     let mut mazes: Vec<usize> = vec![0];
 
-    let mut stopgen: bool = false;
+    let mut maze_generated: bool = false;
     let mut r_f_walls: Vec<[usize; 2]> = Vec::with_capacity(4);
     
-    
-    while {
-        // Add frontier indexes
-        for &index in &mazes {
-            //// If we're not looking at a part of the maze, continue. 
-            //if cellstates[index] != 2 { continue; }
-            // TODO optimise
-            // For each adjacent cell, if it's valid and currently nothing, make it into a frontier!!
-            if (index % w) > 0   { if cellstates[index-1] == 0 { cellstates[index-1] = 1; frontiers.push(index-1); }} // Left
-            if index < (w*(h-1)) { if cellstates[index+w] == 0 { cellstates[index+w] = 1; frontiers.push(index+w); }} // Down
-            if (index % w) < w-1 { if cellstates[index+1] == 0 { cellstates[index+1] = 1; frontiers.push(index+1); }} // Right
-            if index > w-1       { if cellstates[index-w] == 0 { cellstates[index-w] = 1; frontiers.push(index-w); }} // Up
-        }
-        if frontiers.len() == 0 {
-            stopgen = true;
-        } else {
-            // Select a random frontier
-            let rand_frontier_index = rand::thread_rng().gen_range(0..frontiers.len());
-            //let rand_frontier_index: usize = 0;
-            let rand_frontier = frontiers[rand_frontier_index];
-
-            // Get all of its neighbouring walls into a vector, but only if they border a maze!! (And if they're in bounds)
-            if (rand_frontier % w) > 0   { if cellstates[rand_frontier-1] == 2 { r_f_walls.push( [0, rand_frontier] ); }} // Left
-            if rand_frontier < (w*(h-1)) { if cellstates[rand_frontier+w] == 2 { r_f_walls.push( [1, rand_frontier+w] ); }} // Down
-            if (rand_frontier % w) < w-1 { if cellstates[rand_frontier+1] == 2 { r_f_walls.push( [0, rand_frontier+1] ); }} // Right
-            if rand_frontier > w-1       { if cellstates[rand_frontier-w] == 2 { r_f_walls.push( [1, rand_frontier] ); }} // Up
-            // Select a random wall and remove it!!
-            let rand_wall = *r_f_walls.choose(&mut rand::thread_rng()).unwrap();
-
-            walls[rand_wall[0]][rand_wall[1]] = 0;
-            // Make the frontier a maze cell
-            cellstates[rand_frontier] = 2; 
-            mazes.push(rand_frontier);
-            // Remove the frontier index from frontiers
-            frontiers.remove(rand_frontier_index);
-
-            r_f_walls.clear();
-        }
-        stopgen == false
-    }  {}
+    let mut loops = 0;
+    //while {
+    //    loops+=1;
+    //    generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
+    //    maze_generated == false
+    //}  {}
 
     println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
 
-    let window_scale = 1;
+    let window_scale = 2;
     let w_s_6 = window_scale * 6;
     
     let (mut rl, thread) = raylib::init()
@@ -92,6 +58,11 @@ fn main() {
                 continue;
             }
             d.draw_rectangle((index%w) as i32 *w_s_6, (index/w) as i32 *w_s_6, window_scale*6, window_scale*6, if v == 0 {Color::GRAY} else {Color::RED});
+            //d.draw_rectangle((index%w) as i32 *w_s_6, (index/w) as i32 *w_s_6, window_scale*6, window_scale*6, if v == 0 {Color::from_hex("5BCEFA").unwrap()} else {Color::from_hex("F5A9B8").unwrap()});
+        }
+
+        for _ in 0..1 {
+            generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
         }
 
         // Draw walls
@@ -115,5 +86,45 @@ fn main() {
                 d.draw_rectangle(iw as i32*w_s_6, ih as i32*w_s_6, window_scale, window_scale, Color::BLACK);
             }
         }
+    }
+}
+
+fn generation_step(w: & usize, h: & usize, r_f_walls: &mut Vec<[usize; 2]>, maze_generated: &mut bool, mazes: &mut Vec<usize>, frontiers: &mut Vec<usize>, cellstates: &mut Vec<u8>, walls: &mut [Vec<u8>; 2]) {
+    // Add frontier indexes
+    for index in &mut *mazes {
+        //// If we're not looking at a part of the maze, continue. 
+        //if cellstates[index] != 2 { continue; }
+        // TODO optimise
+        // For each adjacent cell, if it's valid and currently nothing, make it into a frontier!!
+        if (*index % *w) > 0      { if cellstates[*index-1] == 0 { cellstates[*index-1] = 1; frontiers.push(*index-1); }} // Left
+        if index < &mut (w*(h-1)) { if cellstates[*index+w] == 0 { cellstates[*index+w] = 1; frontiers.push(*index+w); }} // Down
+        if (*index % *w) < w-1    { if cellstates[*index+1] == 0 { cellstates[*index+1] = 1; frontiers.push(*index+1); }} // Right
+        if index > &mut(*w-1)     { if cellstates[*index-w] == 0 { cellstates[*index-w] = 1; frontiers.push(*index-w); }} // Up
+    } 
+    if frontiers.len() == 0 {
+        *maze_generated = true;
+    } else {
+        // Select a random frontier
+        let rand_frontier_index = rand::thread_rng().gen_range(0..frontiers.len());
+        //let rand_frontier_index: usize = 0;
+        let rand_frontier = frontiers[rand_frontier_index];
+
+        // Get all of its neighbouring walls into a vector, but only if they border a maze!! (And if they're in bounds)
+        if (rand_frontier % w) > 0   { if cellstates[rand_frontier-1] == 2 { r_f_walls.push( [0, rand_frontier] ); }} // Left
+        if rand_frontier < (w*(h-1)) { if cellstates[rand_frontier+w] == 2 { r_f_walls.push( [1, rand_frontier+w] ); }} // Down
+        if (rand_frontier % w) < w-1 { if cellstates[rand_frontier+1] == 2 { r_f_walls.push( [0, rand_frontier+1] ); }} // Right
+        if rand_frontier > w-1       { if cellstates[rand_frontier-w] == 2 { r_f_walls.push( [1, rand_frontier] ); }} // Up
+        // Select a random wall and remove it!!
+        let rand_wall = *r_f_walls.choose(&mut rand::thread_rng()).unwrap();
+
+        walls[rand_wall[0]][rand_wall[1]] = 0;
+        // Make the frontier a maze cell
+        cellstates[rand_frontier] = 2; 
+
+        mazes.push(rand_frontier);
+        // Remove the frontier index from frontiers
+        frontiers.remove(rand_frontier_index);
+
+        r_f_walls.clear();
     }
 }
