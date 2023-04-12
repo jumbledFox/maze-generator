@@ -14,6 +14,7 @@ fn main() {
     // An array of two vectors for storing the walls of the maze, doesn't store the right/bottom-most walls for efficient indexing
     //                            Vertical                               Horizontal
     let mut walls: [Vec<u8>; 2] = [vec![1; ((h*w)).try_into().unwrap()], vec![1; ((w*h)).try_into().unwrap()]];
+    walls[0][0] = 0;
 
     // Is it more efficient to have 3 different vectors? If I were to have just fronteirs and mazes I'd have to check 
     // for a value not existing in TWO different vectors, as opposed to a value being 0 in just 1, however fronteirs and mazes
@@ -38,7 +39,7 @@ fn main() {
 
     println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
 
-    let window_scale = 2;
+    let window_scale = 3;
     let w_s_6 = window_scale * 6;
     
     let (mut rl, thread) = raylib::init()
@@ -79,6 +80,9 @@ fn main() {
             }
             w_type+=1;
         }
+        // Draw side walls
+        d.draw_rectangle(0, h as i32*w_s_6, w as i32*w_s_6, window_scale, Color::BLACK); // Bottom
+        d.draw_rectangle(w as i32*w_s_6, 0, window_scale, (h-1) as i32*w_s_6, Color::BLACK); // Right
 
         // Draw dots
         for ih in 0..(h+1) {
