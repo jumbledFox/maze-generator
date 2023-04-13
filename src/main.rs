@@ -1,6 +1,7 @@
-use std::{time::Instant, cell, env};
+use std::{time::Instant, cell};
 use rand::{prelude::SliceRandom, Rng};
 use raylib::prelude::*;
+use clap::Parser;
 
 // Command line arguments // :3
 /*
@@ -14,14 +15,31 @@ optional window-scale - needs scale after
 optional watch - optional speed afterwards
 */
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    // Width
+    #[arg(long)]
+    width: usize,
+    // Width
+    #[arg(long)]
+    height: usize,
+    // Window Scale
+    #[arg(long, default_value_t = 1)]
+    window_scale: i32,
+}
+
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    dbg!(args);
+    let args = Args::parse();
+    let w = args.width;
+    let h = args.height;
+    let window_scale = args.window_scale;
     let now = Instant::now();
 
     // Width and height of the maze
-    let w: usize = 50;
-    let h: usize = 50;
+    //let w: usize = 50;
+    //let h: usize = 50;
 
     // An array of two vectors for storing the walls of the maze, doesn't store the right/bottom-most walls for efficient indexing
     //                            Vertical                               Horizontal
@@ -42,7 +60,7 @@ fn main() {
     let mut maze_generated: bool = false;
     let mut r_f_walls: Vec<[usize; 2]> = Vec::with_capacity(4);
     
-    let mut loops = 0;
+    //let mut loops = 0;
     //while {
     //    loops+=1;
     //    generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
@@ -51,7 +69,6 @@ fn main() {
 
     println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
 
-    let window_scale = 3;
     let w_s_6 = window_scale * 6;
     
     let (mut rl, thread) = raylib::init()
@@ -65,17 +82,18 @@ fn main() {
 
         d.clear_background(Color::WHITE);
 
+        
+        for _ in 0..25 {
+            generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
+        }
+
+
         // Draw rectangles
         for (index, &v) in cellstates.iter().enumerate() {
             if v == 2 {
                 continue;
             }
             d.draw_rectangle((index%w) as i32 *w_s_6, (index/w) as i32 *w_s_6, window_scale*6, window_scale*6, if v == 0 {Color::GRAY} else {Color::RED});
-            //d.draw_rectangle((index%w) as i32 *w_s_6, (index/w) as i32 *w_s_6, window_scale*6, window_scale*6, if v == 0 {Color::from_hex("5BCEFA").unwrap()} else {Color::from_hex("F5A9B8").unwrap()});
-        }
-
-        for _ in 0..1 {
-            generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
         }
 
         // Draw walls
