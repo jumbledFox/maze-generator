@@ -4,6 +4,8 @@ use raylib::prelude::*;
 
 // Command line arguments // :3
 /*
+EDIT: just use an external library e.g. -> https://docs.rs/clap/latest/clap/
+
              Dimensions   w  h  Window Scale    If watching and speed
 cargo run -- --dimensions 10 10 -window-scale 5 -watch 5
 
