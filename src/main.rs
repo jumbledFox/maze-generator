@@ -10,7 +10,7 @@ cargo run -- --dimensions 10 10 -window-scale 5 -watch 5
 required dimensions
 optional window-scale - needs scale after
 optional watch - optional speed afterwards
- */
+*/
 
 fn main() {
     let args: Vec<String> = env::args().collect();
