@@ -1,10 +1,20 @@
-use std::cell;
-use std::{time::Instant};
-use rand::prelude::SliceRandom;
-use rand::Rng;
+use std::{time::Instant, cell, env};
+use rand::{prelude::SliceRandom, Rng};
 use raylib::prelude::*;
 
+// Command line arguments // :3
+/*
+             Dimensions   w  h  Window Scale    If watching and speed
+cargo run -- --dimensions 10 10 -window-scale 5 -watch 5
+
+required dimensions
+optional window-scale - needs scale after
+optional watch - optional speed afterwards
+ */
+
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    dbg!(args);
     let now = Instant::now();
 
     // Width and height of the maze
