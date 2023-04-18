@@ -1,4 +1,4 @@
-use std::{time::Instant, cell};
+use std::time::Instant;
 use rand::{prelude::SliceRandom, Rng};
 use raylib::prelude::*;
 use clap::Parser;
@@ -27,6 +27,12 @@ struct Args {
     // Window Scale
     #[arg(long, default_value_t = 1)]
     window_scale: i32,
+    // Speed
+    #[arg(long, default_value_t = 1)]
+    draw_speed: usize,
+    // instant generation
+    #[arg(long, short, action)]
+    insta_draw: bool,
 }
 
 
@@ -60,12 +66,12 @@ fn main() {
     let mut maze_generated: bool = false;
     let mut r_f_walls: Vec<[usize; 2]> = Vec::with_capacity(4);
     
-    //let mut loops = 0;
-    //while {
-    //    loops+=1;
-    //    generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
-    //    maze_generated == false
-    //}  {}
+    if args.insta_draw {
+        while {
+            generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
+            maze_generated == false
+        }  {}
+    }
 
     println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
 
@@ -82,9 +88,10 @@ fn main() {
 
         d.clear_background(Color::WHITE);
 
-        
-        for _ in 0..25 {
-            generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
+        if !args.insta_draw || !maze_generated {
+            for _ in 0..args.draw_speed {
+                generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
+            }
         }
 
 
