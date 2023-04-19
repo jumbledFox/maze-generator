@@ -3,18 +3,6 @@ use rand::{prelude::SliceRandom, Rng};
 use raylib::prelude::*;
 use clap::Parser;
 
-// Command line arguments // :3
-/*
-EDIT: just use an external library e.g. -> https://docs.rs/clap/latest/clap/
-
-             Dimensions   w  h  Window Scale    If watching and speed
-cargo run -- --dimensions 10 10 -window-scale 5 -watch 5
-
-required dimensions
-optional window-scale - needs scale after
-optional watch - optional speed afterwards
-*/
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -32,9 +20,8 @@ struct Args {
     draw_speed: usize,
     // instant generation
     #[arg(long, short, action)]
-    insta_draw: bool,
+    instant_generation: bool,
 }
-
 
 fn main() {
     let args = Args::parse();
@@ -52,28 +39,29 @@ fn main() {
     let mut walls: [Vec<u8>; 2] = [vec![1; ((h*w)).try_into().unwrap()], vec![1; ((w*h)).try_into().unwrap()]];
     walls[0][0] = 0;
 
+    let random_starting_cell = rand::thread_rng().gen_range(0..w*h);
+
     // Is it more efficient to have 3 different vectors? If I were to have just fronteirs and mazes I'd have to check 
     // for a value not existing in TWO different vectors, as opposed to a value being 0 in just 1, however fronteirs and mazes
     // are necessary, as storing these is a lot quicker than making them each time I need a vector of every maze or fronteir cell
-
     // Generating
     let mut cellstates: Vec<u8> = vec![0; (w*h).try_into().unwrap()]; // 0 nothing // 1 frontier // 2 maze //
-    cellstates[0] = 2; // Set the maze cell
+    cellstates[random_starting_cell] = 2; // Set the maze cell
     // Vectors containing indexes of fronteirs and mazes
     let mut frontiers: Vec<usize> = vec![];
-    let mut mazes: Vec<usize> = vec![0];
+    let mut mazes: Vec<usize> = vec![random_starting_cell];
 
     let mut maze_generated: bool = false;
     let mut r_f_walls: Vec<[usize; 2]> = Vec::with_capacity(4);
     
-    if args.insta_draw {
+    if args.instant_generation {
         while {
             generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
             maze_generated == false
         }  {}
+        println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
     }
 
-    println!("Generated maze in {:?}ms!", now.elapsed().as_millis());
 
     let w_s_6 = window_scale * 6;
     
@@ -88,7 +76,7 @@ fn main() {
 
         d.clear_background(Color::WHITE);
 
-        if !args.insta_draw || !maze_generated {
+        if !args.instant_generation || !maze_generated {
             for _ in 0..args.draw_speed {
                 generation_step(&w, &h, &mut r_f_walls, &mut maze_generated, &mut mazes, &mut frontiers, &mut cellstates, &mut walls);
             }
@@ -135,7 +123,6 @@ fn generation_step(w: & usize, h: & usize, r_f_walls: &mut Vec<[usize; 2]>, maze
     for index in &mut *mazes {
         //// If we're not looking at a part of the maze, continue. 
         //if cellstates[index] != 2 { continue; }
-        // TODO optimise
         // For each adjacent cell, if it's valid and currently nothing, make it into a frontier!!
         if (*index % *w) > 0      { if cellstates[*index-1] == 0 { cellstates[*index-1] = 1; frontiers.push(*index-1); }} // Left
         if index < &mut (w*(h-1)) { if cellstates[*index+w] == 0 { cellstates[*index+w] = 1; frontiers.push(*index+w); }} // Down
